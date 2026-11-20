@@ -1,2 +1,5 @@
 fastapi==0.162.4
 uvicorn==0.54.0
+bcrypt==5.0.0
+PyJWT==2.13.0
+python-multipart==0.0.32

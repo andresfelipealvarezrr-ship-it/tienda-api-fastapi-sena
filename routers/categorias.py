@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+
+import seguridad
 
 
 router = APIRouter(prefix="/categorias", tags=["Categorias"])
@@ -39,7 +41,8 @@ def obtener_categoria(categoria_id: int):
     return categorias[indice]
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(seguridad.obtener_usuario_actual)])
 def crear_categoria(categoria: CategoriaEntrada):
     global siguiente_id
 
@@ -49,7 +52,7 @@ def crear_categoria(categoria: CategoriaEntrada):
     return nueva_categoria
 
 
-@router.put("/{categoria_id}")
+@router.put("/{categoria_id}", dependencies=[Depends(seguridad.obtener_usuario_actual)])
 def actualizar_categoria(categoria_id: int, categoria: CategoriaEntrada):
     indice = buscar_indice_categoria(categoria_id)
     if indice is None:
@@ -60,7 +63,7 @@ def actualizar_categoria(categoria_id: int, categoria: CategoriaEntrada):
     return categoria_actualizada
 
 
-@router.delete("/{categoria_id}")
+@router.delete("/{categoria_id}", dependencies=[Depends(seguridad.requerir_admin)])
 def eliminar_categoria(categoria_id: int):
     indice = buscar_indice_categoria(categoria_id)
     if indice is None:

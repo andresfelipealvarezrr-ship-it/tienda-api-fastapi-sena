@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+
+import seguridad
 
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
@@ -57,16 +59,16 @@ def obtener_producto(producto_id: int):
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def crear_producto(producto: ProductoEntrada):
+def crear_producto(producto: ProductoEntrada, usuario: seguridad.UsuarioActual):
     global siguiente_id
 
     nuevo_producto = {"id": siguiente_id, **producto.model_dump()}
     productos.append(nuevo_producto)
     siguiente_id += 1
-    return nuevo_producto
+    return {**nuevo_producto, "creado_por": usuario["username"]}
 
 
-@router.put("/{producto_id}")
+@router.put("/{producto_id}", dependencies=[Depends(seguridad.obtener_usuario_actual)])
 def actualizar_producto(producto_id: int, producto: ProductoEntrada):
     indice = buscar_indice_producto(producto_id)
     if indice is None:
@@ -77,7 +79,7 @@ def actualizar_producto(producto_id: int, producto: ProductoEntrada):
     return producto_actualizado
 
 
-@router.delete("/{producto_id}")
+@router.delete("/{producto_id}", dependencies=[Depends(seguridad.requerir_admin)])
 def eliminar_producto(producto_id: int):
     indice = buscar_indice_producto(producto_id)
     if indice is None:
